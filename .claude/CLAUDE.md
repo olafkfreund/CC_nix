@@ -607,6 +607,17 @@ System76's COSMIC Desktop Environment configuration with Rust-based compositor a
 - **Anti-Patterns**: Skipping binary cache setup, mixing imperative/declarative config, hardcoding paths, invalid RON syntax, disabling security features
 - **Note**: Stylix integration not yet available (tracked in issue #265); uses manual theme configuration via RON files
 
+### cargo2nix
+
+Package Rust applications with granular per-crate Nix derivations for optimal caching and dependency sharing.
+
+- **Use when**: Packaging Rust applications, managing Cargo dependencies with Nix, cross-compilation, workspace projects, shared dependencies across projects
+- **Covers**: Cargo.nix generation, flake-based builds, per-crate derivations, workspace support, cross-compilation targets, system dependency overrides, development shells, debugging, comparison with alternatives (crane, crate2nix, naersk, buildRustPackage)
+- **Examples**: CLI tools, multi-binary workspaces, system dependencies (OpenSSL, PostgreSQL), static binaries, cross-platform builds
+- **Golden Path**: Pin cargo2nix version, commit Cargo.nix, use common overrides, regenerate after Cargo.lock changes, workspaceShell for dev
+- **Anti-Patterns**: Forgetting to regenerate Cargo.nix, using ignoreLockHash in production, not pinning versions, hardcoding paths, mixing rustup with Nix
+- **Trade-offs**: Fine-grained caching vs Cargo.nix maintenance; choose crane for simplicity, cargo2nix for shared dependencies and custom toolchains
+
 **How to use skills**: Skills are automatically invoked by Claude Code when the context matches. You can also reference them explicitly when asking questions.
 
 ## 🤖 Subagents

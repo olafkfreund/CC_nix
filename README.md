@@ -86,6 +86,7 @@ Specialized capabilities for specific NixOS workflows in `.claude/skills/`:
 | `agenix` | Age-encrypted secrets management with SSH keys | Managing sensitive data, passwords, API keys, certificates in NixOS |
 | `gnome` | GNOME desktop configuration with Stylix integration | Setting up GNOME desktop, extensions, themes, settings with best practices |
 | `cosmic-de` | System76's COSMIC Desktop Environment configuration | Setting up COSMIC Desktop, applets, RON config, themes, performance optimization |
+| `cargo2nix` | Package Rust applications with granular per-crate builds | Packaging Rust apps, managing Cargo dependencies, cross-compilation, workspace support |
 
 ### Subagents
 
