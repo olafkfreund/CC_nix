@@ -97,6 +97,7 @@ Specialized AI agents for automated NixOS workflows in `.claude/agents/`:
 | `nix-check` | Lint, check, and fix NixOS configs using deadnix, statix, nixpkgs-fmt | File changes, pre-commit, code review |
 | `issue-checker` | Monitor GitHub issues for bugs affecting installed packages | Before updates, system planning, CI/CD pipelines |
 | `local-logs` | Analyze system logs, research solutions, generate configuration fixes | Service failures, boot issues, performance problems, troubleshooting |
+| `update` | Automated system updates with safety checks, test rebuilds, and notifications | Scheduled updates, manual requests, systemd timers |
 
 ### Future Resources (Contributions Welcome!)
 

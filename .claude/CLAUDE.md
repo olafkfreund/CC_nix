@@ -653,6 +653,19 @@ Intelligent diagnostic agent that analyzes system logs, identifies problems, res
 - **Integration**: systemd timers, boot analysis, email alerts, monitoring systems, pattern learning
 - **Examples**: Service troubleshooting, boot debugging, kernel issues, database problems, network fixes
 
+### update
+
+Automated NixOS system update orchestrator with safety checks, issue detection, test rebuilds, automatic fixes, and desktop notifications.
+
+- **Automatically runs on**: Scheduled updates (systemd timers), manual update requests, CI/CD pipelines
+- **Purpose**: Safe automated system updates with pre-flight checks, test validation, and rollback capability
+- **Workflow**: Flake update → issue-checker integration → test rebuild → automatic fixes → system switch → notification
+- **Features**: 8-step safety workflow, issue-checker integration, automatic rollback, desktop notifications, comprehensive logging, multi-host support
+- **Integration**: systemd timers (daily/weekly/monthly), issue-checker subagent, notification system, monitoring dashboards
+- **Safety**: Risk evaluation, critical issue detection, automatic rollback on failure, service verification, generation tracking
+- **Notifications**: Desktop alerts on completion/failure, Slack/email integration, status reports, update summaries
+- **Examples**: Weekly automated updates, manual safe updates, fleet management, CI/CD integration
+
 **How to use subagents**: Subagents run proactively when their context matches. You can also invoke them explicitly when needed.
 
 ## 🎓 Learning Resources
