@@ -85,6 +85,7 @@ Specialized capabilities for specific NixOS workflows in `.claude/skills/`:
 | `stylix` | System-wide theming with color schemes, wallpapers, fonts | Applying consistent themes across NixOS/Home Manager applications |
 | `agenix` | Age-encrypted secrets management with SSH keys | Managing sensitive data, passwords, API keys, certificates in NixOS |
 | `gnome` | GNOME desktop configuration with Stylix integration | Setting up GNOME desktop, extensions, themes, settings with best practices |
+| `cosmic-de` | System76's COSMIC Desktop Environment configuration | Setting up COSMIC Desktop, applets, RON config, themes, performance optimization |
 
 ### Subagents
 

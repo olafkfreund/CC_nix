@@ -596,6 +596,17 @@ Comprehensive GNOME desktop environment configuration with deep Stylix theming i
 - **Golden Path**: Declarative configuration via Home Manager, Stylix for consistent theming, dconf discovery with `dconf watch /`
 - **Anti-Patterns**: Manual extension installation, mixed imperative/declarative config, hardcoded paths, ignoring session restart
 
+### cosmic-de
+
+System76's COSMIC Desktop Environment configuration with Rust-based compositor and RON configuration files.
+
+- **Use when**: Setting up COSMIC Desktop, configuring applets, managing themes, optimizing performance on NixOS
+- **Covers**: Native NixOS installation (25.05+), flake-based setup, RON configuration files, Home Manager integration, panel/applet management, compositor settings, keyboard shortcuts, golden path, anti-patterns
+- **Examples**: Desktop installation, panel customization, workspace configuration, multi-monitor setup, performance tuning, troubleshooting
+- **Golden Path**: Native NixOS module for stability, binary cache configuration, Home Manager for user settings, System76 scheduler for performance
+- **Anti-Patterns**: Skipping binary cache setup, mixing imperative/declarative config, hardcoding paths, invalid RON syntax, disabling security features
+- **Note**: Stylix integration not yet available (tracked in issue #265); uses manual theme configuration via RON files
+
 **How to use skills**: Skills are automatically invoked by Claude Code when the context matches. You can also reference them explicitly when asking questions.
 
 ## 🤖 Subagents
