@@ -611,6 +611,16 @@ Monitors NixOS/nixpkgs GitHub issues to identify bugs affecting your installed p
 - **Integration**: systemd timers, pre-update hooks, email/Slack notifications, HTML reports
 - **Examples**: Safe rebuild wrapper, automated monitoring, CI/CD checks, multi-system management
 
+### local-logs
+
+Intelligent diagnostic agent that analyzes system logs, identifies problems, researches solutions, and generates NixOS configuration fixes.
+
+- **Automatically runs on**: Service failures, boot issues, performance problems, error reports, post-deployment validation
+- **Purpose**: Root cause analysis, automated problem-solving, configuration fix generation
+- **Features**: Multi-source log collection (journalctl, dmesg, app logs), pattern analysis, solution research, NixOS config generation
+- **Integration**: systemd timers, boot analysis, email alerts, monitoring systems, pattern learning
+- **Examples**: Service troubleshooting, boot debugging, kernel issues, database problems, network fixes
+
 **How to use subagents**: Subagents run proactively when their context matches. You can also invoke them explicitly when needed.
 
 ## 🎓 Learning Resources
