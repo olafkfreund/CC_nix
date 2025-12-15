@@ -8,14 +8,18 @@ Execute a thorough health assessment of the entire NixOS infrastructure, identif
 
 ## Pre-Check Setup
 
+**Note**: This command provides a template for system health checks. Replace `HOST1`, `HOST2`, etc. with your actual hostnames, and adapt service checks to match your infrastructure.
+
 ```bash
 # Ensure you have access to all hosts
-just ping-hosts
+for host in HOST1 HOST2 HOST3; do
+  ping -c 1 $host >/dev/null && echo "$host: OK" || echo "$host: FAILED"
+done
 
-# Check monitoring services are running
-grafana-status
-prometheus-status
-node-exporter-status
+# Check monitoring services are running (if you use them)
+systemctl status grafana
+systemctl status prometheus
+systemctl status node-exporter
 ```
 
 ## Health Check Components
@@ -24,19 +28,19 @@ node-exporter-status
 
 ```bash
 # Test network connectivity to all hosts
-ping -c 3 p620.home.freundcloud.com
-ping -c 3 razer.home.freundcloud.com
-ping -c 3 p510.home.freundcloud.com
-ping -c 3 samsung.home.freundcloud.com
+# Replace with your actual hostnames/domains
+for host in host1.domain.com host2.domain.com host3.domain.com; do
+  ping -c 3 $host
+done
 
 # Test SSH connectivity
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== Testing $host ==="
   ssh -o ConnectTimeout=5 $host "hostname && uptime"
 done
 
-# Test Tailscale connectivity
-tailscale status | grep -E "p620|razer|p510|samsung"
+# Test VPN connectivity (if using Tailscale/WireGuard)
+tailscale status  # or: wg show
 ```
 
 **Record:**
@@ -48,17 +52,11 @@ tailscale status | grep -E "p620|razer|p510|samsung"
 
 ```bash
 # Check for failed systemd services on each host
-echo "=== P620 (Workstation/Monitoring Server) ==="
-ssh p620 "systemctl --failed --no-pager"
-
-echo "=== Razer (Mobile/Development) ==="
-ssh razer "systemctl --failed --no-pager"
-
-echo "=== P510 (Media Server) ==="
-ssh p510 "systemctl --failed --no-pager"
-
-echo "=== Samsung (Mobile/Backup) ==="
-ssh samsung "systemctl --failed --no-pager"
+for host in host1 host2 host3; do
+  echo "=== $host ==="
+  ssh $host "systemctl --failed --no-pager"
+  echo
+done
 ```
 
 **For each failed service:**
@@ -68,44 +66,34 @@ ssh samsung "systemctl --failed --no-pager"
 
 ### 3. Critical Services Verification
 
-Check essential services on each host:
+Check essential services on each host (adapt to your services):
 
-**P620 (Monitoring Server):**
 ```bash
-ssh p620 "systemctl is-active prometheus grafana alertmanager node-exporter nixos-exporter systemd-exporter"
-```
+# Example: Check monitoring services on monitoring host
+ssh monitoring-host "systemctl is-active prometheus grafana node-exporter"
 
-**P510 (Media Server):**
-```bash
-ssh p510 "systemctl is-active plex nzbget tautulli node-exporter plex-exporter nzbget-exporter"
-```
-
-**Razer & Samsung (Development/Mobile):**
-```bash
-for host in razer samsung; do
+# Example: Check application services
+for host in app-host1 app-host2; do
   echo "=== $host ==="
-  ssh $host "systemctl is-active node-exporter systemd-exporter"
+  ssh $host "systemctl is-active YOUR_SERVICE_1 YOUR_SERVICE_2 node-exporter"
 done
-```
 
-**AI Services (P620):**
-```bash
-ssh p620 "systemctl is-active ollama"
-ssh p620 "ai-cli --status"
+# List all active services to identify what to monitor
+ssh YOUR_HOST "systemctl list-units --type=service --state=running"
 ```
 
 ### 4. Disk Usage Analysis
 
 ```bash
 # Check disk usage on all hosts
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Disk Usage ==="
   ssh $host "df -h / /nix/store /home 2>/dev/null | grep -v tmpfs"
   echo
 done
 
 # Check Nix store size and identify cleanup candidates
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Nix Store Analysis ==="
   ssh $host "du -sh /nix/store 2>/dev/null"
   ssh $host "nix-store --gc --print-dead | wc -l | xargs echo 'Dead paths:'"
@@ -130,7 +118,7 @@ ssh HOST "nix-store --optimize"
 
 ```bash
 # Current resource usage
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Resources ==="
   ssh $host "free -h && echo && top -bn1 | head -20"
   echo
@@ -147,7 +135,7 @@ done
 
 ```bash
 # Check boot times
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Boot Analysis ==="
   ssh $host "systemd-analyze"
   ssh $host "systemd-analyze blame | head -10"
@@ -159,20 +147,23 @@ done
 - Boot time >2 minutes: investigate slow services
 - Any service >30 seconds: optimization candidate
 
-### 7. Monitoring Stack Health
+### 7. Monitoring Stack Health (if using Prometheus/Grafana)
 
 ```bash
-# Prometheus targets status
-curl -s http://p620:9090/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
+# Replace MONITORING_HOST with your monitoring server hostname/IP
+MONITORING_HOST="monitoring-server"
 
-# Grafana dashboard count
-grafana-status
+# Prometheus targets status
+curl -s http://$MONITORING_HOST:9090/api/v1/targets | jq '.data.activeTargets[] | {job: .labels.job, instance: .labels.instance, health: .health}'
+
+# Grafana status
+systemctl status grafana
 
 # Alertmanager status
-curl -s http://p620:9093/api/v2/status | jq '.uptime, .cluster.peers[]'
+curl -s http://$MONITORING_HOST:9093/api/v2/status | jq '.uptime, .cluster.peers[]'
 
 # Check for firing alerts
-curl -s http://p620:9093/api/v2/alerts | jq '.[] | select(.status.state == "active")'
+curl -s http://$MONITORING_HOST:9093/api/v2/alerts | jq '.[] | select(.status.state == "active")'
 ```
 
 **Verify:**
@@ -181,54 +172,58 @@ curl -s http://p620:9093/api/v2/alerts | jq '.[] | select(.status.state == "acti
 - Alert rules loading correctly
 - No firing alerts (unless expected)
 
-### 8. Media Server Health (P510)
+### 8. Application-Specific Health Checks
 
 ```bash
-# Plex status
-ssh p510 "systemctl status plex"
-curl -s http://p510:9104/metrics | grep plex_active_streams
+# Example: Check your specific application services
+# Replace with your actual services and hosts
 
-# NZBGet status
-ssh p510 "systemctl status nzbget"
-curl -s http://p510:9103/metrics | grep nzbget_download_rate
+# Web application status
+ssh app-server "systemctl status your-web-app"
 
-# Tautulli API check
-ssh p510 "curl -s 'http://localhost:8181/api/v2?apikey=099a2877fb7c410fb3031e24b3e781bf&cmd=get_server_info' | jq '.response.result'"
+# Database status
+ssh db-server "systemctl status postgresql"
+
+# Cache status
+ssh cache-server "systemctl status redis"
+
+# List all services to identify what to monitor
+systemctl list-units --type=service --state=running
 ```
 
 ### 9. Network Stability
 
 ```bash
-# Tailscale status
-ssh p620 "tailscale status"
+# VPN status (if using Tailscale/WireGuard)
+ssh your-host "tailscale status"  # or: wg show
 
 # DNS resolution check
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host DNS ==="
   ssh $host "resolvectl status | grep 'DNS Servers'"
   ssh $host "nslookup google.com | grep Server"
   echo
 done
 
-# Check for DNS conflicts (razer common issue)
-ssh razer "resolvectl status | grep -A5 'Link.*tailscale'"
+# Check for DNS conflicts
+ssh your-host "resolvectl status"
 ```
 
 ### 10. Security Audit
 
 ```bash
 # Check for security updates
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Security ==="
   ssh $host "nixos-rebuild dry-run 2>&1 | grep -i security || echo 'No security updates'"
   echo
 done
 
 # Check fail2ban status (if configured)
-ssh p620 "systemctl is-active fail2ban && fail2ban-client status"
+ssh your-host "systemctl is-active fail2ban && fail2ban-client status"
 
 # Check firewall rules
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Firewall ==="
   ssh $host "iptables -L -n | grep -c 'ACCEPT\\|DROP\\|REJECT' | xargs echo 'Rules:'"
   echo
@@ -239,7 +234,7 @@ done
 
 ```bash
 # Check backup configurations
-for host in p620 razer p510 samsung; do
+for host in host1 host2 host3; do
   echo "=== $host Backup Status ==="
   ssh $host "systemctl list-timers | grep backup || echo 'No backup timers configured'"
   echo
@@ -269,8 +264,8 @@ Create a comprehensive report with the following sections:
 
 ## Overall Status: [HEALTHY/DEGRADED/CRITICAL]
 
-- Total Hosts: 4
-- Hosts Online: X/4
+- Total Hosts: [YOUR_HOST_COUNT]
+- Hosts Online: X/[YOUR_HOST_COUNT]
 - Critical Issues: X
 - Warnings: X
 - Open Tasks: X
@@ -493,21 +488,21 @@ ln -sf health-report-$(date +%Y-%m-%d).md docs/health-reports/latest.md
 ## Example Output
 
 ```markdown
-# Infrastructure Health Report - 2025-01-29
+# Infrastructure Health Report - [DATE]
 
 ## Overall Status: HEALTHY ✅
 
-- Total Hosts: 4/4 online
+- Total Hosts: X/X online
 - Critical Issues: 0
 - Warnings: 2
 - Open Tasks: 5
 
 ## Summary
-All systems operational. Minor cleanup recommended on P510 (disk 78%).
+All systems operational. Minor cleanup recommended on host3 (disk 78%).
 Monitoring stack fully functional. No critical alerts.
 
 ## Action Items
-- [ ] Run cleanup on P510 (disk usage high)
-- [ ] Investigate razer DNS intermittent issues
+- [ ] Run cleanup on host3 (disk usage high)
+- [ ] Investigate host2 DNS intermittent issues
 - [ ] Update 3 packages with security fixes
 ```

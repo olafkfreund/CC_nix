@@ -167,16 +167,16 @@ Deploy to p620
 | Create issue | `/new_task` | 2min |
 | Check tasks | `/check_tasks` | 30s |
 
-## 🔧 Just Commands (Shell)
+## 🔧 Standard NixOS Commands
 
-Complement slash commands with Just commands:
+Complement slash commands with standard NixOS operations:
 
 ```bash
-just check-syntax                     # Syntax validation (5s)
-just validate-quick                   # Quick validation (30s)
-just test-host HOST                   # Build test (60s)
-just quick-deploy HOST                # Smart deploy (varies)
-just validate                         # Full validation (2min)
+nix flake check                                           # Syntax & validation (5-30s)
+nix flake check --show-trace                              # Detailed validation (2min)
+nixos-rebuild build --flake .#HOST                        # Build test (60s)
+sudo nixos-rebuild switch --flake .#HOST                  # Local deploy
+nixos-rebuild switch --flake .#HOST --target-host HOST --use-remote-sudo  # Remote deploy
 ```
 
 ## 💡 Pro Tips

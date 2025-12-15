@@ -75,7 +75,7 @@ pkgs.callPackage ./pkgs/mypackage {}
 
 ```bash
 # Current version in configuration
-nix eval .#nixosConfigurations.p620.pkgs.PACKAGE_NAME.version
+nix eval .#nixosConfigurations.YOUR_HOST.pkgs.PACKAGE_NAME.version
 
 # Latest in nixpkgs unstable
 nix search nixpkgs#PACKAGE_NAME --json | jq '.[].version'
@@ -206,21 +206,21 @@ nix flake lock --override-input nixpkgs github:NixOS/nixpkgs/COMMIT_HASH
 ### Syntax Validation:
 
 ```bash
-# Check Nix syntax
-just check-syntax
+# Check Nix syntax and configuration
+nix flake check
 
-# Validate configuration
-just validate-quick
+# For more detailed output
+nix flake check --show-trace
 ```
 
 ### Build Test:
 
 ```bash
-# Test on affected hosts
-just test-host p620
+# Test build on specific host configuration
+nixos-rebuild build --flake .#YOUR_HOST
 
-# Test all hosts if system-wide change
-just quick-test
+# Test all host configurations
+nix flake check
 ```
 
 ### Package-Specific Testing:
@@ -241,14 +241,17 @@ nix build .#packages.x86_64-linux.PACKAGE_NAME.tests
 
 For services:
 ```bash
-# Deploy to test host
-just quick-deploy p620
+# Deploy to test host (local machine)
+sudo nixos-rebuild switch --flake .#YOUR_HOST
+
+# Or deploy to remote host
+nixos-rebuild switch --flake .#YOUR_HOST --target-host YOUR_HOST --use-remote-sudo
 
 # Check service status
-ssh p620 "systemctl status SERVICE_NAME"
+ssh YOUR_HOST "systemctl status SERVICE_NAME"
 
 # Check service logs
-ssh p620 "journalctl -u SERVICE_NAME -n 50"
+ssh YOUR_HOST "journalctl -u SERVICE_NAME -n 50"
 ```
 
 ## Step 7: Create GitHub Issue
@@ -287,10 +290,9 @@ ssh p620 "journalctl -u SERVICE_NAME -n 50"
   - [ ] No breaking changes detected
 
   ## Affected Hosts
-  - [ ] P620
-  - [ ] Razer
-  - [ ] P510
-  - [ ] Samsung
+  - [ ] host1
+  - [ ] host2
+  - [ ] host3
 
   ## Release Notes
   [Link to upstream changelog]
@@ -363,7 +365,7 @@ Update PACKAGE_NAME to version X.Y.Z
 ## Testing Evidence
 \```bash
 # Build successful
-just test-host HOST ✅
+nixos-rebuild build --flake .#HOST ✅
 
 # Package tests passed
 nix build .#packages.x86_64-linux.PACKAGE_NAME ✅
@@ -416,14 +418,21 @@ Closes #${ISSUE_NUM}
 # After approval
 gh pr merge ${ISSUE_NUM} --squash --delete-branch
 
-# Deploy to affected hosts
-just quick-deploy p620  # If affects P620
-just quick-deploy razer  # If affects Razer
-just quick-deploy p510  # If affects P510
-just quick-deploy samsung  # If affects Samsung
+# Deploy to affected hosts (choose one method):
 
-# Or deploy to all
-just deploy-all-parallel
+# Method 1: Deploy locally (if on the host)
+sudo nixos-rebuild switch --flake .#host1
+
+# Method 2: Deploy remotely
+nixos-rebuild switch --flake .#host1 --target-host host1 --use-remote-sudo
+nixos-rebuild switch --flake .#host2 --target-host host2 --use-remote-sudo
+nixos-rebuild switch --flake .#host3 --target-host host3 --use-remote-sudo
+
+# Method 3: Deploy to all hosts (parallel - advanced)
+for host in host1 host2 host3; do
+  nixos-rebuild switch --flake .#$host --target-host $host --use-remote-sudo &
+done
+wait
 ```
 
 ## Step 12: Post-Deployment Verification

@@ -248,7 +248,7 @@ Quick check for critical issues only
 
 Automatically runs as part of:
 - `/review` command (security section)
-- `just validate` (security checks)
+- `nix flake check` (security validation)
 - Pre-commit hooks (optional)
 
 ## Scoring System

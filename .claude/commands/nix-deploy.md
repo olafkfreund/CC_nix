@@ -21,7 +21,7 @@ That's it! I'll handle everything automatically.
 git status  # Identify changed files
 
 # 2. Syntax Validation
-just check-syntax  # Fast Nix syntax check
+nix flake check  # Nix syntax and configuration check
 
 # 3. Anti-Pattern Detection
 # Scan changed files for anti-patterns
@@ -37,10 +37,10 @@ just check-syntax  # Fast Nix syntax check
 
 ```bash
 # 4. Quick Validation
-just validate-quick  # Essential checks only
+nix flake check  # Essential checks
 
 # 5. Host-Specific Test Build
-just test-host HOST  # Full configuration build test
+nixos-rebuild build --flake .#HOST  # Full configuration build test
 
 # 6. Security Audit
 # Run security checks on changed modules
@@ -60,7 +60,11 @@ just test-host HOST  # Full configuration build test
 # SKIPS deployment if no changes
 
 # 8. Deployment
-just quick-deploy HOST  # Optimized deployment
+# Local deployment
+sudo nixos-rebuild switch --flake .#HOST
+
+# Or remote deployment
+nixos-rebuild switch --flake .#HOST --target-host HOST --use-remote-sudo
 
 # 9. Service Verification
 # Check critical services started successfully

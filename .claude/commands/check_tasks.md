@@ -148,7 +148,7 @@ Based on the review, suggest concrete next steps:
 1. **Issue #123** (Critical) - Complete testing and deploy
    - Estimated: 4 hours remaining
    - Action: Run full test suite and validation
-   - Command: `just validate && just test-host p620`
+   - Command: `nix flake check --show-trace && nixos-rebuild build --flake .#YOUR_HOST`
 
 2. **Issue #456** (High) - Unblock and start implementation
    - Estimated: 8 hours

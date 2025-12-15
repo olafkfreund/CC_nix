@@ -84,7 +84,7 @@ in {
 Add to `modules/default.nix` in appropriate section.
 
 ### 4. Validate Automatically
-Run: `just check-syntax` and `just test-modules`
+Run: `nix flake check` to validate syntax and build all configurations
 
 ### 5. Provide Usage Example
 Show example in host configuration with all options.

@@ -104,8 +104,8 @@ Format the GitHub issue body with the following structure:
 - [ ] Implement solution following research
 - [ ] Write/update tests
 - [ ] Update documentation
-- [ ] Run validation: `just validate`
-- [ ] Test deployment: `just test-host HOST`
+- [ ] Run validation: `nix flake check --show-trace`
+- [ ] Test deployment: `nixos-rebuild build --flake .#HOST`
 - [ ] Create pull request
 - [ ] Code review
 - [ ] Merge after approval
@@ -173,8 +173,8 @@ gh issue develop 123 --checkout
 4. **When Complete**:
 
    ```bash
-   just validate
-   just test-host HOST
+   nix flake check --show-trace
+   nixos-rebuild build --flake .#HOST
    git add .
    git commit -m "[type]: description (#123)"
    git push -u origin [type]/123-brief-description

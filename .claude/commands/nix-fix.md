@@ -98,7 +98,7 @@ Check and fix all modules in modules/services/
 2. **Generate Fixes**: Create corrected code with explanations
 3. **Show Diff**: Display before/after for each fix
 4. **Apply Changes**: Update files with fixes
-5. **Validate**: Run `just check-syntax` to ensure correctness
+5. **Validate**: Run `nix flake check` to ensure correctness
 6. **Report**: Summary of fixes applied
 
 ## Safety Features
