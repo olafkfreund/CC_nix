@@ -586,6 +586,16 @@ Age-encrypted secrets management using SSH keys for secure storage and deploymen
 - **Covers**: SSH/age encryption, automatic decryption on deployment, secrets.nix configuration, rekeying, NixOS/Home Manager integration
 - **Examples**: User passwords, database credentials, API tokens, TLS certificates, Wireguard keys, environment files
 
+### gnome
+
+Comprehensive GNOME desktop environment configuration with deep Stylix theming integration and declarative settings management.
+
+- **Use when**: Configuring GNOME desktop, extensions, themes, settings with NixOS best practices
+- **Covers**: Installation, Home Manager dconf settings, extension management, Stylix integration, GTK theming, GDM configuration, golden path, anti-patterns
+- **Examples**: Desktop setup, extension configuration, keyboard shortcuts, workspace management, theme customization, troubleshooting
+- **Golden Path**: Declarative configuration via Home Manager, Stylix for consistent theming, dconf discovery with `dconf watch /`
+- **Anti-Patterns**: Manual extension installation, mixed imperative/declarative config, hardcoded paths, ignoring session restart
+
 **How to use skills**: Skills are automatically invoked by Claude Code when the context matches. You can also reference them explicitly when asking questions.
 
 ## 🤖 Subagents

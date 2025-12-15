@@ -245,7 +245,9 @@
       "Bash(wc:*)",
       "WebFetch(domain:pyproject-nix.github.io)",
       "WebFetch(domain:stylix.danth.me)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:wiki.nixos.org)",
+      "WebFetch(domain:hoverbear.org)"
     ],
     "additionalDirectories": [
       "/"

@@ -84,6 +84,7 @@ Specialized capabilities for specific NixOS workflows in `.claude/skills/`:
 | `uv2nix` | Convert Python/uv projects to Nix expressions | Packaging Python apps, managing Python dependencies with Nix |
 | `stylix` | System-wide theming with color schemes, wallpapers, fonts | Applying consistent themes across NixOS/Home Manager applications |
 | `agenix` | Age-encrypted secrets management with SSH keys | Managing sensitive data, passwords, API keys, certificates in NixOS |
+| `gnome` | GNOME desktop configuration with Stylix integration | Setting up GNOME desktop, extensions, themes, settings with best practices |
 
 ### Subagents
 
