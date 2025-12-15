@@ -247,7 +247,8 @@
       "WebFetch(domain:stylix.danth.me)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:wiki.nixos.org)",
-      "WebFetch(domain:hoverbear.org)"
+      "WebFetch(domain:hoverbear.org)",
+      "WebFetch(domain:nixos.wiki)"
     ],
     "additionalDirectories": [
       "/"
