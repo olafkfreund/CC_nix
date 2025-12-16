@@ -73,6 +73,16 @@ ln -s /path/to/CC_nix/.claude/commands ~/.claude/commands/nix/
 Generic, reusable commands for NixOS development:
 
 - **`/nix-module`** - Create NixOS modules following best practices
+- **`/new_pkg`** - Package existing software for Nix
+- **`/new_vm`** - Create NixOS virtual machines
+- **`/new-devenv-py`** - Create Python devenv project with Claude Code integration
+- **`/new-devenv-go`** - Create Go devenv project with Claude Code integration
+- **`/new-devenv-rust`** - Create Rust devenv project with Claude Code integration
+- **`/new-devenv-ts`** - Create TypeScript devenv project with Claude Code integration
+- **`/nixpkgs-fork`** - Fork and setup nixpkgs repository for contributions
+- **`/nixpkgs-test`** - Test packages locally before creating PR
+- **`/nixpkgs-pr`** - Create nixpkgs pull request with automated testing
+- **`/nixpkgs-review`** - Review and test others' nixpkgs PRs
 - **`/nix-fix`** - Detect and fix common anti-patterns
 - **`/review`** - Comprehensive code review against patterns
 - **`/nix-security`** - Security audit with recommendations

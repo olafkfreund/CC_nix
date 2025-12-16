@@ -79,6 +79,124 @@ Package mycli from GitHub
 Create a development VM with 4GB RAM and Docker
 ```
 
+**`/new-devenv-py`** - Create Python devenv project
+
+- 🐍 Complete Python development environment
+- 🤖 Claude Code integration with agents and hooks
+- 📦 Pre-configured testing, linting, formatting
+- 🔧 Auto-format on save, test on change
+- 🎯 Optional services (PostgreSQL, Redis, MongoDB)
+- ⏱️ Complete in ~3 minutes
+
+```
+/new-devenv-py
+Create a new Python project called "my-api" with Python 3.11
+```
+
+**`/new-devenv-go`** - Create Go devenv project
+
+- 🐹 Complete Go development environment
+- 🤖 Claude Code integration with specialized agents
+- 📦 Pre-configured testing, benchmarking, profiling
+- 🔧 Auto-format, build check, test on change
+- 🎯 Optional services (PostgreSQL, Redis, NATS, Kafka)
+- ⏱️ Complete in ~3 minutes
+
+```
+/new-devenv-go
+Create a new Go project "my-api" for "github.com/user/my-api" with Go 1.21
+```
+
+**`/new-devenv-rust`** - Create Rust devenv project
+
+- 🦀 Complete Rust development environment
+- 🤖 Claude Code integration with safety-focused agents
+- 📦 Pre-configured testing, benchmarking, clippy, rustfmt
+- 🔧 Auto-format, clippy check, compile verification
+- 🛡️ Unsafe code auditing and memory safety checks
+- 🎯 Optional services (PostgreSQL, Redis, MongoDB)
+- ⏱️ Complete in ~3 minutes
+
+```
+/new-devenv-rust
+Create a new Rust binary "my-cli" with stable channel
+```
+
+**`/new-devenv-ts`** - Create TypeScript devenv project
+
+- 📘 Complete TypeScript/Node.js development environment
+- 🤖 Claude Code integration with type-safety agents
+- 📦 Pre-configured testing (Vitest), linting (ESLint), formatting (Prettier)
+- 🔧 Auto-format, lint check, type verification
+- 🎯 Choice of package manager (npm, yarn, pnpm, bun)
+- 🌐 Optional services (PostgreSQL, Redis, MongoDB)
+- ⏱️ Complete in ~3 minutes
+
+```
+/new-devenv-ts
+Create a TypeScript web app "my-app" with pnpm
+```
+
+### Nixpkgs Contribution
+
+**`/nixpkgs-fork`** - Fork and setup nixpkgs repository
+
+- Fork nixpkgs on GitHub automatically
+- Clone and configure git remotes (origin + upstream)
+- Install development tools (nixpkgs-review, nix-update, nixfmt)
+- Setup helper scripts for common workflows
+- Configure Cachix for faster builds
+- Complete in ~5-10 minutes
+
+```
+/nixpkgs-fork
+# Interactive setup wizard
+```
+
+**`/nixpkgs-test`** - Test packages locally before PR
+
+- Three test levels: quick (1-5min), full (5-15min), all (15-60min)
+- Comprehensive build testing with nix-build
+- nixpkgs-review integration for reverse dependencies
+- Cross-platform build testing
+- Runtime verification
+- Static analysis and meta attribute checks
+
+```
+/nixpkgs-test
+Test firefox with full test level
+```
+
+**`/nixpkgs-pr`** - Create nixpkgs pull request
+
+- Automated nixpkgs-review testing
+- Commit message format validation
+- Meta attributes quality check
+- PR template with test results
+- Automatic label assignment
+- Edge case handling (conflicts, large rebuilds)
+- Complete in ~2-5 minutes
+
+```
+/nixpkgs-pr
+Create PR for firefox update to 121.0
+```
+
+**`/nixpkgs-review`** - Review others' nixpkgs PRs
+
+- Test any PR with nixpkgs-review tool
+- Build changed packages and reverse dependencies
+- Runtime testing and code quality review
+- Security implications analysis
+- Generate comprehensive review report
+- Post feedback to GitHub
+- Three review depths: quick, thorough, contribute
+
+```
+/nixpkgs-review
+Review PR #12345 with thorough depth
+```
+
 ### Code Quality
 
 **`/nix-fix`** - Fix anti-patterns automatically
@@ -510,6 +628,18 @@ just validate              # Full validation
 /nix-module           # Create new module (2min)
 /new_pkg             # Package existing software (10-15min)
 /new_vm              # Create NixOS VM (15-20min)
+
+# Devenv Projects
+/new-devenv-py       # Create Python devenv project (3min)
+/new-devenv-go       # Create Go devenv project (3min)
+/new-devenv-rust     # Create Rust devenv project (3min)
+/new-devenv-ts       # Create TypeScript devenv project (3min)
+
+# Nixpkgs Contribution
+/nixpkgs-fork        # Fork and setup nixpkgs (5-10min)
+/nixpkgs-test        # Test package before PR (1-60min)
+/nixpkgs-pr          # Create nixpkgs PR (2-5min)
+/nixpkgs-review      # Review others' PRs (5-60min)
 
 # Code Quality
 /nix-fix             # Fix anti-patterns (1min)

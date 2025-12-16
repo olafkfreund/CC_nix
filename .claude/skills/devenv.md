@@ -1608,6 +1608,661 @@ devenv repl              # Open Nix REPL with config
 devenv print-dev-env     # Print shell environment
 ```
 
+## Claude Code Integration
+
+### Overview
+
+Devenv provides native integration with Claude Code through hooks, custom commands, specialized agents, and MCP server configuration. This enables AI-assisted development workflows with automatic tooling and context-aware assistance.
+
+### Global Configuration
+
+**Set up Claude Code to use devenv globally:**
+
+```markdown
+# ~/.claude/CLAUDE.md
+Use devenv for running commands, ensuring all tools and dependencies are available.
+```
+
+This instructs Claude Code to always use the devenv environment when executing commands in your projects.
+
+### Basic Setup
+
+**Enable Claude Code integration in your project:**
+
+```nix
+{
+  claude.code.enable = true;
+}
+```
+
+This enables:
+- Automatic code formatting after edits (via git-hooks)
+- Pre-commit hook integration
+- Tool availability verification
+
+### Custom Slash Commands
+
+**Create project-specific commands that Claude Code can execute:**
+
+```nix
+{
+  claude.code.commands = {
+    test = "Run the test suite: cargo test";
+    build = "Build in release mode: cargo build --release";
+    deploy = "Deploy to staging: ./scripts/deploy.sh staging";
+    lint = "Run all linters: npm run lint && cargo clippy";
+    db-migrate = "Run database migrations: python manage.py migrate";
+  };
+}
+```
+
+**Usage in Claude Code:**
+```bash
+# Claude Code can now execute these as:
+/test
+/build
+/deploy
+# etc.
+```
+
+### Specialized Agents
+
+**Configure AI assistants with restricted tool access for specific tasks:**
+
+```nix
+{
+  claude.code.agents = {
+    code-reviewer = {
+      description = "Code quality and security specialist";
+      proactive = true;
+      tools = [ "Read" "Grep" "TodoWrite" ];
+      prompt = ''
+        Review code for:
+        - Security vulnerabilities
+        - Best practices adherence
+        - Performance issues
+        - Code style consistency
+        Provide specific, actionable feedback with examples.
+      '';
+    };
+
+    test-runner = {
+      description = "Test execution and debugging specialist";
+      proactive = false;
+      tools = [ "Bash" "Read" "Edit" ];
+      prompt = ''
+        Execute tests and analyze failures.
+        Suggest fixes based on test output.
+        Update tests as needed.
+      '';
+    };
+
+    docs-writer = {
+      description = "Documentation specialist";
+      proactive = true;
+      tools = [ "Read" "Write" "Grep" ];
+      prompt = ''
+        Generate and maintain documentation.
+        Keep docs in sync with code changes.
+        Ensure examples are accurate and tested.
+      '';
+    };
+  };
+}
+```
+
+**Agent Properties:**
+- **description**: Human-readable purpose
+- **proactive**: Auto-invoke when context matches (true/false)
+- **tools**: Restricted set of tools agent can use
+- **prompt**: Behavior definition and instructions
+
+### MCP Servers
+
+**Configure Model Context Protocol servers for extended capabilities:**
+
+```nix
+{
+  claude.code.mcpServers = {
+    # Devenv MCP server (provides devenv context)
+    devenv = {
+      type = "stdio";
+      command = "devenv";
+      args = [ "mcp" ];
+    };
+
+    # HTTP-based server with authentication
+    custom-api = {
+      type = "http";
+      url = "http://localhost:8080/mcp";
+      headers = {
+        "Authorization" = "Bearer ${config.env.API_TOKEN}";
+      };
+    };
+
+    # Database query server
+    postgres = {
+      type = "stdio";
+      command = "psql-mcp-server";
+      args = [ "--database" "myapp" ];
+    };
+  };
+}
+```
+
+**MCP Server Types:**
+- **stdio**: Standard input/output communication
+- **http**: HTTP-based with optional authentication
+
+### Custom Hooks
+
+**Five hook types for workflow automation:**
+
+#### 1. PreToolUse (Blocking)
+Runs before tool execution, can block actions:
+
+```nix
+{
+  claude.code.hooks = {
+    pre-tool-use = pkgs.writeShellScript "pre-tool-hook" ''
+      #!/usr/bin/env bash
+      # Receives JSON via stdin
+      TOOL_DATA=$(cat)
+
+      # Extract tool name and parameters
+      TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool')
+      FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path // empty')
+
+      # Block dangerous operations
+      if [[ "$TOOL_NAME" == "Edit" ]] && [[ "$FILE_PATH" == "config/production.yml" ]]; then
+        echo "❌ Cannot edit production config without approval"
+        exit 1  # Non-zero exit blocks the action
+      fi
+
+      # Allow action
+      exit 0
+    '';
+  };
+}
+```
+
+#### 2. PostToolUse (Non-blocking)
+Runs after tool execution:
+
+```nix
+{
+  claude.code.hooks = {
+    post-tool-use = pkgs.writeShellScript "post-tool-hook" ''
+      #!/usr/bin/env bash
+      TOOL_DATA=$(cat)
+
+      TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool')
+      FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path // empty')
+
+      # Auto-format after edits
+      if [[ "$TOOL_NAME" == "Edit" ]] && [[ "$FILE_PATH" =~ \.nix$ ]]; then
+        nixpkgs-fmt "$FILE_PATH"
+        echo "✅ Formatted $FILE_PATH"
+      fi
+
+      # Run tests after code changes
+      if [[ "$TOOL_NAME" == "Edit" ]] && [[ "$FILE_PATH" =~ \.rs$ ]]; then
+        cargo test --quiet
+        echo "✅ Tests passed"
+      fi
+    '';
+  };
+}
+```
+
+#### 3. Notification Hook
+Triggered on Claude notifications:
+
+```nix
+{
+  claude.code.hooks = {
+    notification = pkgs.writeShellScript "notification-hook" ''
+      #!/usr/bin/env bash
+      # Send notifications to monitoring system
+      notify-send "Claude Code" "$(cat)"
+    '';
+  };
+}
+```
+
+#### 4. Stop Hook
+Executes when Claude finishes responding:
+
+```nix
+{
+  claude.code.hooks = {
+    stop = pkgs.writeShellScript "stop-hook" ''
+      #!/usr/bin/env bash
+      # Log session completion
+      echo "[$(date)] Session completed" >> .devenv/claude-sessions.log
+
+      # Save conversation context
+      cp .devenv/claude-context.json .devenv/sessions/$(date +%s).json
+    '';
+  };
+}
+```
+
+#### 5. SubagentStop Hook
+Runs when subagent tasks complete:
+
+```nix
+{
+  claude.code.hooks = {
+    subagent-stop = pkgs.writeShellScript "subagent-stop-hook" ''
+      #!/usr/bin/env bash
+      SUBAGENT_DATA=$(cat)
+
+      AGENT_NAME=$(echo "$SUBAGENT_DATA" | jq -r '.agent_name')
+      STATUS=$(echo "$SUBAGENT_DATA" | jq -r '.status')
+
+      echo "[$(date)] Agent $AGENT_NAME completed with status: $STATUS" \
+        >> .devenv/subagent-log.txt
+    '';
+  };
+}
+```
+
+### Hook Input Format
+
+**Hooks receive JSON via stdin:**
+
+```json
+{
+  "tool": "Edit",
+  "parameters": {
+    "file_path": "/path/to/file.rs",
+    "old_string": "...",
+    "new_string": "..."
+  },
+  "timestamp": "2025-01-15T10:30:00Z"
+}
+```
+
+**Parse using jq:**
+```bash
+TOOL_NAME=$(echo "$INPUT" | jq -r '.tool')
+FILE_PATH=$(echo "$INPUT" | jq -r '.parameters.file_path // empty')
+```
+
+### Complete Integration Example
+
+**Full devenv.nix with Claude Code integration:**
+
+```nix
+{ pkgs, config, ... }:
+{
+  # Enable Claude Code integration
+  claude.code = {
+    enable = true;
+
+    # Custom commands
+    commands = {
+      test = "Run test suite: pytest tests/ -v";
+      lint = "Run linters: black . && flake8 .";
+      build = "Build project: python setup.py build";
+      deploy-dev = "Deploy to dev: ./scripts/deploy.sh dev";
+    };
+
+    # Specialized agents
+    agents = {
+      reviewer = {
+        description = "Code reviewer";
+        proactive = true;
+        tools = [ "Read" "Grep" "TodoWrite" ];
+        prompt = "Review for quality and security";
+      };
+
+      tester = {
+        description = "Test specialist";
+        proactive = false;
+        tools = [ "Bash" "Read" ];
+        prompt = "Run and debug tests";
+      };
+    };
+
+    # MCP servers
+    mcpServers = {
+      devenv = {
+        type = "stdio";
+        command = "devenv";
+        args = [ "mcp" ];
+      };
+    };
+
+    # Hooks
+    hooks = {
+      pre-tool-use = pkgs.writeShellScript "pre-hook" ''
+        # Validate before edits
+        TOOL_DATA=$(cat)
+        TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool')
+
+        if [[ "$TOOL_NAME" == "Edit" ]]; then
+          # Check if tests pass before allowing edits
+          pytest tests/ --quiet || {
+            echo "❌ Tests failing - fix tests first"
+            exit 1
+          }
+        fi
+      '';
+
+      post-tool-use = pkgs.writeShellScript "post-hook" ''
+        # Auto-format after edits
+        TOOL_DATA=$(cat)
+        FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path // empty')
+
+        if [[ "$FILE_PATH" =~ \.py$ ]]; then
+          black "$FILE_PATH"
+          echo "✅ Formatted $FILE_PATH"
+        fi
+      '';
+    };
+  };
+
+  # Language configuration
+  languages.python = {
+    enable = true;
+    venv.enable = true;
+  };
+
+  # Services
+  services.postgres.enable = true;
+
+  # Pre-commit hooks (auto-triggered by Claude Code)
+  pre-commit.hooks = {
+    black.enable = true;
+    flake8.enable = true;
+    mypy.enable = true;
+  };
+
+  # Scripts
+  scripts = {
+    setup.exec = ''
+      pip install -r requirements.txt
+      python manage.py migrate
+    '';
+  };
+}
+```
+
+### Automatic Code Formatting
+
+**When git-hooks are enabled, Claude Code automatically formats files after editing:**
+
+```nix
+{
+  # Enable pre-commit hooks
+  pre-commit.hooks = {
+    # Python
+    black.enable = true;
+    isort.enable = true;
+
+    # Nix
+    nixfmt.enable = true;
+    statix.enable = true;
+
+    # JavaScript
+    prettier.enable = true;
+    eslint.enable = true;
+
+    # Rust
+    rustfmt.enable = true;
+    clippy.enable = true;
+  };
+}
+```
+
+**After Claude Code edits a file:**
+1. Saves changes
+2. Runs pre-commit hook
+3. Applies formatting
+4. Reports formatting result
+
+### Best Practices
+
+#### DO ✅
+
+1. **Use meaningful command names**
+   ```nix
+   commands.test = "Run test suite: pytest";  # Clear and descriptive
+   ```
+
+2. **Configure proactive agents for repetitive tasks**
+   ```nix
+   agents.reviewer.proactive = true;  # Auto-review after changes
+   ```
+
+3. **Restrict agent tools appropriately**
+   ```nix
+   tools = [ "Read" "Grep" ];  # Read-only access for analysis
+   ```
+
+4. **Use pre-hooks to prevent mistakes**
+   ```nix
+   pre-tool-use = # Block dangerous operations
+   ```
+
+5. **Enable automatic formatting**
+   ```nix
+   pre-commit.hooks.nixfmt.enable = true;
+   ```
+
+6. **Document hook behavior**
+   ```bash
+   # Block edits to production config without approval
+   ```
+
+#### DON'T ❌
+
+1. **Don't grant excessive permissions**
+   ```nix
+   # ❌ Bad - reviewer can execute arbitrary commands
+   tools = [ "Bash" "Edit" "Write" ];
+
+   # ✅ Good - reviewer has read-only access
+   tools = [ "Read" "Grep" ];
+   ```
+
+2. **Don't forget error handling in hooks**
+   ```bash
+   # ❌ Bad - silent failures
+   command_that_might_fail
+
+   # ✅ Good - explicit error handling
+   command_that_might_fail || {
+     echo "❌ Command failed"
+     exit 1
+   }
+   ```
+
+3. **Don't hardcode paths in hooks**
+   ```bash
+   # ❌ Bad
+   FILE_PATH="/home/user/project/file.py"
+
+   # ✅ Good - use parameters from stdin
+   FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path')
+   ```
+
+4. **Don't make hooks too slow**
+   ```bash
+   # ❌ Bad - runs entire test suite on every edit
+   pytest tests/
+
+   # ✅ Good - quick validation only
+   pytest tests/ --quiet --exitfirst
+   ```
+
+### Debugging Integration
+
+**Test hooks manually:**
+
+```bash
+# Simulate hook input
+echo '{"tool":"Edit","parameters":{"file_path":"test.py"}}' | \
+  .devenv/state/.hooks/pre-tool-use
+
+# Check exit code
+echo $?  # 0 = success, non-zero = blocked
+```
+
+**View hook logs:**
+
+```bash
+# Hook output
+cat .devenv/state/claude-hooks.log
+
+# Subagent logs
+cat .devenv/subagent-log.txt
+```
+
+**Debug MCP servers:**
+
+```bash
+# Test devenv MCP server
+devenv mcp
+
+# Check server connectivity
+curl http://localhost:8080/mcp/health
+```
+
+### Example Workflows
+
+#### Workflow 1: Automated Code Review
+
+```nix
+{
+  claude.code.agents.reviewer = {
+    description = "Automated code reviewer";
+    proactive = true;
+    tools = [ "Read" "Grep" "TodoWrite" ];
+    prompt = ''
+      Review all code changes for:
+      - Security vulnerabilities (SQL injection, XSS, etc.)
+      - Best practices adherence
+      - Performance anti-patterns
+      - Missing error handling
+
+      Create TodoWrite items for issues found.
+      Provide specific file:line references.
+    '';
+  };
+
+  pre-commit.hooks = {
+    security-check.enable = true;
+    complexity-check.enable = true;
+  };
+}
+```
+
+#### Workflow 2: Test-Driven Development
+
+```nix
+{
+  claude.code = {
+    commands = {
+      test = "Run tests: pytest tests/ -v";
+      test-watch = "Watch tests: pytest-watch tests/";
+      coverage = "Coverage report: pytest --cov=src tests/";
+    };
+
+    hooks.pre-tool-use = pkgs.writeShellScript "tdd-hook" ''
+      TOOL_DATA=$(cat)
+      TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool')
+      FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path // empty')
+
+      # Require tests to pass before edits
+      if [[ "$TOOL_NAME" == "Edit" ]] && [[ "$FILE_PATH" =~ src/ ]]; then
+        pytest tests/ --quiet || {
+          echo "❌ Fix failing tests before editing code"
+          exit 1
+        }
+      fi
+    '';
+
+    hooks.post-tool-use = pkgs.writeShellScript "test-after-edit" ''
+      TOOL_DATA=$(cat)
+      FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path // empty')
+
+      if [[ "$FILE_PATH" =~ \.(py|rs|ts)$ ]]; then
+        pytest tests/ --quiet
+        echo "✅ Tests passed after changes"
+      fi
+    '';
+  };
+}
+```
+
+#### Workflow 3: Documentation Sync
+
+```nix
+{
+  claude.code.agents.docs = {
+    description = "Documentation specialist";
+    proactive = true;
+    tools = [ "Read" "Write" "Grep" ];
+    prompt = ''
+      Keep documentation in sync with code:
+      - Update API docs when signatures change
+      - Refresh examples when implementations change
+      - Add missing documentation
+      - Fix outdated information
+
+      Ensure all examples are tested and valid.
+    '';
+  };
+
+  claude.code.hooks.post-tool-use = pkgs.writeShellScript "doc-check" ''
+    TOOL_DATA=$(cat)
+    FILE_PATH=$(echo "$TOOL_DATA" | jq -r '.parameters.file_path // empty')
+
+    # Update docs after source changes
+    if [[ "$FILE_PATH" =~ ^src/ ]]; then
+      echo "📝 Reminder: Update documentation in docs/"
+    fi
+  '';
+}
+```
+
+### Integration with CI/CD
+
+**GitHub Actions with Claude Code hooks:**
+
+```yaml
+# .github/workflows/claude-code.yml
+name: Claude Code Integration
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v22
+      - uses: cachix/cachix-action@v12
+        with:
+          name: devenv
+
+      - name: Install devenv
+        run: nix profile install nixpkgs#devenv
+
+      - name: Test hooks
+        run: |
+          devenv shell --command bash <<EOF
+          # Simulate hook execution
+          echo '{"tool":"Edit","parameters":{"file_path":"test.py"}}' | \
+            .devenv/state/.hooks/pre-tool-use
+          EOF
+
+      - name: Run tests
+        run: devenv test
+```
+
 ## Success Metrics
 
 - **Fast Setup**: New developers productive in minutes
@@ -1616,5 +2271,8 @@ devenv print-dev-env     # Print shell environment
 - **Composable**: Share configurations across projects
 - **Tested**: CI integration ensures quality
 - **Documented**: Clear configuration and scripts
+- **AI-Assisted**: Claude Code integration for automated workflows
+- **Quality**: Automatic code review and formatting
+- **Safe**: Pre-hooks prevent dangerous operations
 
-Ready to create fast, reproducible development environments with devenv! 🚀
+Ready to create fast, reproducible development environments with devenv and Claude Code! 🚀
