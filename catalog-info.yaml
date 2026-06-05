@@ -7,6 +7,7 @@ metadata:
   name: CC_nix
   description: "CC config for working with nixos and nixpkgs. A place to share what works and what does not."
   annotations:
+    backstage.io/techdocs-ref: dir:.
     github.com/project-slug: olafkfreund/CC_nix
   tags: []
 spec:
